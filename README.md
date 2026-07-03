@@ -1,57 +1,108 @@
-# Sample Hardhat 3 Project (`node:test` and `viem`)
+# ⛓️ Agent Integrity Protocol Smart Contract
 
-This project showcases a Hardhat 3 project using the native Node.js test runner (`node:test`) and the `viem` library for Ethereum interactions.
+Solidity smart contract powering the Agent Integrity Protocol. The contract enables AI agent registration, execution proof storage, and dispute management on the Ethereum blockchain.
 
-To learn more about Hardhat 3, please visit the [Getting Started guide](https://hardhat.org/docs/getting-started#getting-started-with-hardhat-3). To share your feedback, join our [Hardhat 3](https://hardhat.org/hardhat3-telegram-group) Telegram group or [open an issue](https://github.com/NomicFoundation/hardhat/issues/new) in our GitHub issue tracker.
+---
 
-## Project Overview
+## 🚀 Features
 
-This example project includes:
+- 🤖 Register AI Agents
+- 📜 Store Execution Proofs
+- ⚖️ Raise Disputes
+- 📢 Smart Contract Events
+- 🔒 On-chain Verification
 
-- A simple Hardhat configuration file.
-- Foundry-compatible Solidity unit tests.
-- TypeScript integration tests using [`node:test`](nodejs.org/api/test.html), the new Node.js native test runner, and [`viem`](https://viem.sh/).
-- Examples demonstrating how to connect to different types of networks, including locally simulating OP mainnet.
+---
 
-## Usage
+## 🛠️ Tech Stack
 
-### Running Tests
+- Solidity
+- Hardhat
+- TypeScript
+- Ethers.js
 
-To run all the tests in the project, execute the following command:
+---
 
-```shell
-npx hardhat test
+## 📂 Project Structure
+contracts/
+scripts/
+artifacts/
+cache/
+typechain-types/
+
+---
+
+## 📜 Smart Contract Functions
+
+### Register Agent
+
+```solidity
+registerAgent(
+    string name,
+    string agentType,
+    uint256 trustScore,
+    uint256 stake
+)
 ```
-
-You can also selectively run the Solidity or `node:test` tests:
-
-```shell
-npx hardhat test solidity
-npx hardhat test nodejs
+Registers an AI agent on-chain.
+```Store Execution
+storeExecution(
+    string executionId,
+    string proofHash
+)
 ```
-
-### Make a deployment to Sepolia
-
-This project includes an example Ignition module to deploy the contract. You can deploy this module to a locally simulated chain or to Sepolia.
-
-To run the deployment to a local chain:
-
-```shell
-npx hardhat ignition deploy ignition/modules/Counter.ts
+Stores execution proof.
+```Raise Dispute
+raiseDispute(
+    string executionId,
+    string reason
+)
 ```
+Creates a dispute record.
 
-To run the deployment to Sepolia, you need an account with funds to send the transaction. The provided Hardhat configuration includes a Configuration Variable called `SEPOLIA_PRIVATE_KEY`, which you can use to set the private key of the account you want to use.
+## ⚙️ Installation
 
-You can set the `SEPOLIA_PRIVATE_KEY` variable using the `hardhat-keystore` plugin or by setting it as an environment variable.
+Clone
 
-To set the `SEPOLIA_PRIVATE_KEY` config variable using `hardhat-keystore`:
+git clone https://github.com/Sanaya77/agent-integrity-protocol-blockchain.git
 
-```shell
-npx hardhat keystore set SEPOLIA_PRIVATE_KEY
-```
+Install dependencies
 
-After setting the variable, you can run the deployment with the Sepolia network:
+npm install
 
-```shell
-npx hardhat ignition deploy --network sepolia ignition/modules/Counter.ts
-```
+Compile contracts
+
+npx hardhat compile
+
+Start local blockchain
+
+npx hardhat node
+
+Deploy
+
+npx hardhat run scripts/deploy.ts --network localhost
+
+## 📦 Contract Components
+Agent Registration
+Execution Storage
+Dispute Management
+Events
+On-chain Records
+
+## 🌱 Future Improvements
+ERC20 Staking
+IPFS Proof Storage
+DAO Governance
+Reputation System
+Multi-signature Verification
+Testnet Deployment
+
+## Architecture and workflow
+![Architecture](images/aipblockchain.png)
+
+👩‍💻 Author
+
+Sanaya Y. Kulkarni
+
+GitHub:
+https://github.com/Sanaya77
