@@ -35,6 +35,28 @@ export declare namespace AgentIntegrityProtocol {
     reason: string,
     resolved: boolean
   ] & { executionId: string; reason: string; resolved: boolean };
+
+  export type ExecutionStruct = {
+    executionId: string;
+    proofHash: string;
+    owner: AddressLike;
+    timestamp: BigNumberish;
+    verified: boolean;
+  };
+
+  export type ExecutionStructOutput = [
+    executionId: string,
+    proofHash: string,
+    owner: string,
+    timestamp: bigint,
+    verified: boolean
+  ] & {
+    executionId: string;
+    proofHash: string;
+    owner: string;
+    timestamp: bigint;
+    verified: boolean;
+  };
 }
 
 export interface AgentIntegrityProtocolInterface extends Interface {
@@ -43,17 +65,25 @@ export interface AgentIntegrityProtocolInterface extends Interface {
       | "agents"
       | "disputes"
       | "executions"
+      | "getDispute"
       | "getDisputes"
+      | "getDisputesCount"
+      | "getExecution"
+      | "owner"
       | "raiseDispute"
       | "registerAgent"
+      | "resolveDispute"
       | "storeExecution"
+      | "updateAgentTrust"
   ): FunctionFragment;
 
   getEvent(
     nameOrSignatureOrTopic:
       | "AgentRegistered"
       | "DisputeRaised"
+      | "DisputeResolved"
       | "ExecutionStored"
+      | "TrustScoreUpdated"
   ): EventFragment;
 
   encodeFunctionData(functionFragment: "agents", values: [AddressLike]): string;
@@ -63,9 +93,22 @@ export interface AgentIntegrityProtocolInterface extends Interface {
   ): string;
   encodeFunctionData(functionFragment: "executions", values: [string]): string;
   encodeFunctionData(
+    functionFragment: "getDispute",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "getDisputes",
     values?: undefined
   ): string;
+  encodeFunctionData(
+    functionFragment: "getDisputesCount",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getExecution",
+    values: [string]
+  ): string;
+  encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "raiseDispute",
     values: [string, string]
@@ -75,17 +118,35 @@ export interface AgentIntegrityProtocolInterface extends Interface {
     values: [string, string, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "resolveDispute",
+    values: [BigNumberish, boolean, BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "storeExecution",
     values: [string, string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "updateAgentTrust",
+    values: [AddressLike, BigNumberish]
   ): string;
 
   decodeFunctionResult(functionFragment: "agents", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "disputes", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "executions", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "getDispute", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getDisputes",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "getDisputesCount",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getExecution",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "raiseDispute",
     data: BytesLike
@@ -95,7 +156,15 @@ export interface AgentIntegrityProtocolInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "resolveDispute",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "storeExecution",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "updateAgentTrust",
     data: BytesLike
   ): Result;
 }
@@ -126,12 +195,53 @@ export namespace DisputeRaisedEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
+export namespace DisputeResolvedEvent {
+  export type InputTuple = [
+    disputeIndex: BigNumberish,
+    executionId: string,
+    validDispute: boolean,
+    updatedTrustScore: BigNumberish
+  ];
+  export type OutputTuple = [
+    disputeIndex: bigint,
+    executionId: string,
+    validDispute: boolean,
+    updatedTrustScore: bigint
+  ];
+  export interface OutputObject {
+    disputeIndex: bigint;
+    executionId: string;
+    validDispute: boolean;
+    updatedTrustScore: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
 export namespace ExecutionStoredEvent {
   export type InputTuple = [executionId: string, proofHash: string];
   export type OutputTuple = [executionId: string, proofHash: string];
   export interface OutputObject {
     executionId: string;
     proofHash: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace TrustScoreUpdatedEvent {
+  export type InputTuple = [
+    agentOwner: AddressLike,
+    newTrustScore: BigNumberish
+  ];
+  export type OutputTuple = [agentOwner: string, newTrustScore: bigint];
+  export interface OutputObject {
+    agentOwner: string;
+    newTrustScore: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -222,11 +332,27 @@ export interface AgentIntegrityProtocol extends BaseContract {
     "view"
   >;
 
+  getDispute: TypedContractMethod<
+    [index: BigNumberish],
+    [AgentIntegrityProtocol.DisputeStructOutput],
+    "view"
+  >;
+
   getDisputes: TypedContractMethod<
     [],
     [AgentIntegrityProtocol.DisputeStructOutput[]],
     "view"
   >;
+
+  getDisputesCount: TypedContractMethod<[], [bigint], "view">;
+
+  getExecution: TypedContractMethod<
+    [executionId: string],
+    [AgentIntegrityProtocol.ExecutionStructOutput],
+    "view"
+  >;
+
+  owner: TypedContractMethod<[], [string], "view">;
 
   raiseDispute: TypedContractMethod<
     [executionId: string, reason: string],
@@ -245,8 +371,24 @@ export interface AgentIntegrityProtocol extends BaseContract {
     "nonpayable"
   >;
 
+  resolveDispute: TypedContractMethod<
+    [
+      disputeIndex: BigNumberish,
+      validDispute: boolean,
+      trustScoreDelta: BigNumberish
+    ],
+    [void],
+    "nonpayable"
+  >;
+
   storeExecution: TypedContractMethod<
     [executionId: string, proofHash: string],
+    [void],
+    "nonpayable"
+  >;
+
+  updateAgentTrust: TypedContractMethod<
+    [agentOwner: AddressLike, newTrustScore: BigNumberish],
     [void],
     "nonpayable"
   >;
@@ -299,12 +441,32 @@ export interface AgentIntegrityProtocol extends BaseContract {
     "view"
   >;
   getFunction(
+    nameOrSignature: "getDispute"
+  ): TypedContractMethod<
+    [index: BigNumberish],
+    [AgentIntegrityProtocol.DisputeStructOutput],
+    "view"
+  >;
+  getFunction(
     nameOrSignature: "getDisputes"
   ): TypedContractMethod<
     [],
     [AgentIntegrityProtocol.DisputeStructOutput[]],
     "view"
   >;
+  getFunction(
+    nameOrSignature: "getDisputesCount"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "getExecution"
+  ): TypedContractMethod<
+    [executionId: string],
+    [AgentIntegrityProtocol.ExecutionStructOutput],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "owner"
+  ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "raiseDispute"
   ): TypedContractMethod<
@@ -325,9 +487,27 @@ export interface AgentIntegrityProtocol extends BaseContract {
     "nonpayable"
   >;
   getFunction(
+    nameOrSignature: "resolveDispute"
+  ): TypedContractMethod<
+    [
+      disputeIndex: BigNumberish,
+      validDispute: boolean,
+      trustScoreDelta: BigNumberish
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
     nameOrSignature: "storeExecution"
   ): TypedContractMethod<
     [executionId: string, proofHash: string],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "updateAgentTrust"
+  ): TypedContractMethod<
+    [agentOwner: AddressLike, newTrustScore: BigNumberish],
     [void],
     "nonpayable"
   >;
@@ -347,11 +527,25 @@ export interface AgentIntegrityProtocol extends BaseContract {
     DisputeRaisedEvent.OutputObject
   >;
   getEvent(
+    key: "DisputeResolved"
+  ): TypedContractEvent<
+    DisputeResolvedEvent.InputTuple,
+    DisputeResolvedEvent.OutputTuple,
+    DisputeResolvedEvent.OutputObject
+  >;
+  getEvent(
     key: "ExecutionStored"
   ): TypedContractEvent<
     ExecutionStoredEvent.InputTuple,
     ExecutionStoredEvent.OutputTuple,
     ExecutionStoredEvent.OutputObject
+  >;
+  getEvent(
+    key: "TrustScoreUpdated"
+  ): TypedContractEvent<
+    TrustScoreUpdatedEvent.InputTuple,
+    TrustScoreUpdatedEvent.OutputTuple,
+    TrustScoreUpdatedEvent.OutputObject
   >;
 
   filters: {
@@ -377,6 +571,17 @@ export interface AgentIntegrityProtocol extends BaseContract {
       DisputeRaisedEvent.OutputObject
     >;
 
+    "DisputeResolved(uint256,string,bool,uint256)": TypedContractEvent<
+      DisputeResolvedEvent.InputTuple,
+      DisputeResolvedEvent.OutputTuple,
+      DisputeResolvedEvent.OutputObject
+    >;
+    DisputeResolved: TypedContractEvent<
+      DisputeResolvedEvent.InputTuple,
+      DisputeResolvedEvent.OutputTuple,
+      DisputeResolvedEvent.OutputObject
+    >;
+
     "ExecutionStored(string,string)": TypedContractEvent<
       ExecutionStoredEvent.InputTuple,
       ExecutionStoredEvent.OutputTuple,
@@ -386,6 +591,17 @@ export interface AgentIntegrityProtocol extends BaseContract {
       ExecutionStoredEvent.InputTuple,
       ExecutionStoredEvent.OutputTuple,
       ExecutionStoredEvent.OutputObject
+    >;
+
+    "TrustScoreUpdated(address,uint256)": TypedContractEvent<
+      TrustScoreUpdatedEvent.InputTuple,
+      TrustScoreUpdatedEvent.OutputTuple,
+      TrustScoreUpdatedEvent.OutputObject
+    >;
+    TrustScoreUpdated: TypedContractEvent<
+      TrustScoreUpdatedEvent.InputTuple,
+      TrustScoreUpdatedEvent.OutputTuple,
+      TrustScoreUpdatedEvent.OutputObject
     >;
   };
 }
